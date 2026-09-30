@@ -1,15 +1,34 @@
 import type { OrderStatus } from '../types'
 
 const styles: Record<OrderStatus, string> = {
-  pending: 'bg-yellow-100 text-yellow-800',
-  shipped: 'bg-blue-100 text-blue-800',
-  delivered: 'bg-green-100 text-green-800',
-  cancelled: 'bg-red-100 text-red-800',
+  pending:
+    'bg-amber-50 text-amber-700 ring-1 ring-amber-100',
+  shipped:
+    'bg-blue-50 text-blue-700 ring-1 ring-blue-100',
+  delivered:
+    'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100',
+  cancelled:
+    'bg-red-50 text-red-700 ring-1 ring-red-100',
 }
 
-export default function OrderStatusBadge({ status }: { status: OrderStatus }) {
+export default function OrderStatusBadge({
+  status,
+}: {
+  status: OrderStatus
+}) {
   return (
-    <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${styles[status]}`}>
+    <span
+      className={`
+        inline-flex
+        rounded-lg
+        px-2.5
+        py-1
+        text-xs
+        font-semibold
+        capitalize
+        ${styles[status]}
+      `}
+    >
       {status}
     </span>
   )
