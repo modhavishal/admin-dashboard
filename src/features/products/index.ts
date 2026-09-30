@@ -1,0 +1,5 @@
+export { useProductStore } from './store'
+export type { Product } from './types'
+export { productSchema } from './schema'
+export type { ProductFormValues } from './schema'
+export { default as ProductsPage } from './pages/ProductsPage'
