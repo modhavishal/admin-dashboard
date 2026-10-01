@@ -1,12 +1,41 @@
 import { Navigate, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import toast from 'react-hot-toast'
 import LoginForm from '../components/LoginForm'
+import RegisterForm from '../components/RegisterForm'
 import { useAuthStore } from '../store'
+import { registerAccount, signInAccount } from '../firebase'
 
 export default function LoginPage() {
   const navigate = useNavigate()
-
+  const [showRegister, setShowRegister] = useState(false)
   const user = useAuthStore((s) => s.user)
-  const login = useAuthStore((s) => s.login)
+  const isLoading = useAuthStore((s) => s.isLoading)
+  const setUser = useAuthStore((s) => s.setUser)
+
+  const handleLogin = async ({ email, password }: { email: string; password: string }) => {
+    try {
+      setUser(await signInAccount(email, password))
+      toast.success('Signed in successfully.')
+      navigate('/', { replace: true })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to sign in.')
+    }
+  }
+
+  const handleRegister = async ({ name, email, password }: { name: string; email: string; password: string }) => {
+    try {
+      setUser(await registerAccount(name, email, password))
+      toast.success('Account created successfully.')
+      navigate('/', { replace: true })
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Unable to create your account.')
+    }
+  }
+
+  if (isLoading) {
+    return <div className="flex min-h-screen items-center justify-center text-sm text-slate-500">Checking session...</div>
+  }
 
   if (user) {
     return <Navigate to="/" replace />
@@ -26,21 +55,29 @@ export default function LoginPage() {
             {/* Heading */}
             <div className="mb-8">
               <h1 className="text-[32px] font-bold tracking-[-0.8px] text-slate-800">
-                Welcome back
+                {showRegister ? 'Create your account' : 'Welcome back'}
               </h1>
 
               <p className="text-sm leading-6 text-slate-400">
-                Order from different drugstores all around the country
+                {showRegister
+                  ? 'Set up your PharmaCare administrator account.'
+                  : 'Order from different drugstores all around the country'}
               </p>
             </div>
 
             {/* Form */}
-            <LoginForm
-              onSubmit={(v) => {
-                login(v.email)
-                navigate('/')
-              }}
-            />
+            {showRegister ? (
+              <RegisterForm
+                onSubmit={handleRegister}
+                onLogin={() => setShowRegister(false)}
+              />
+            ) : (
+              <LoginForm
+                onForgotPassword={() => navigate('/forgot-password')}
+                onRegister={() => setShowRegister(true)}
+                onSubmit={handleLogin}
+              />
+            )}
           </div>
         </div>
 

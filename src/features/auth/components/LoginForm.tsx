@@ -11,13 +11,17 @@ import {
 
 export default function LoginForm({
   onSubmit,
+  onForgotPassword,
+  onRegister,
 }: {
-  onSubmit: (v: LoginFormValues) => void
+  onSubmit: (v: LoginFormValues) => Promise<void>
+  onForgotPassword: () => void
+  onRegister: () => void
 }) {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   })
@@ -49,6 +53,7 @@ export default function LoginForm({
         <div className="mt-2 text-right">
           <button
             type="button"
+            onClick={onForgotPassword}
             className="text-xs font-medium text-blue-600 transition hover:text-blue-700"
           >
             Forgot password?
@@ -59,6 +64,7 @@ export default function LoginForm({
       {/* Login */}
       <Button
         type="submit"
+        disabled={isSubmitting}
         className="
           mt-2
           h-12
@@ -74,8 +80,14 @@ export default function LoginForm({
           active:scale-[0.99]
         "
       >
-        Login account
+        {isSubmitting ? 'Signing in...' : 'Login account'}
       </Button>
+      <p className="text-center text-sm text-slate-500">
+        New here?{' '}
+        <button type="button" onClick={onRegister} className="font-semibold text-blue-600 hover:text-blue-700">
+          Create an account
+        </button>
+      </p>
     </form>
   )
 }
