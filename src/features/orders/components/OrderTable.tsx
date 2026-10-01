@@ -1,27 +1,21 @@
 import {
-  AlertCircle,
   CalendarDays,
   ChevronDown,
   ShoppingBag,
 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 
 import { formatCurrency } from '../../../shared/utils/formatCurrency'
 import { formatDate } from '../../../shared/utils/formatDate'
 
 import type { Order, OrderStatus } from '../types'
-import OrderStatusBadge from './OrderStatusBadge'
+import { allowedOrderStatusTransitions } from '../types'
+import { orderStatusStyles } from './OrderStatusBadge'
 
 type Props = {
   orders: Order[]
   onStatusChange: (id: number, status: OrderStatus) => void
 }
-
-const statuses: OrderStatus[] = [
-  'pending',
-  'shipped',
-  'delivered',
-  'cancelled',
-]
 
 export default function OrderTable({
   orders,
@@ -93,12 +87,8 @@ export default function OrderTable({
                 Total
               </th>
 
-              <th className="px-6 py-4 text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Status
-              </th>
-
               <th className="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-slate-400">
-                Update
+                Manage
               </th>
             </tr>
           </thead>
@@ -155,67 +145,13 @@ export default function OrderTable({
                   </span>
                 </td>
 
-                {/* Status */}
-                <td className="px-6 py-4">
-                  <OrderStatusBadge status={order.status} />
-                </td>
-
-                {/* Update */}
+                {/* Manage */}
                 <td className="px-6 py-4">
                   <div className="flex justify-end">
-                    <div className="relative">
-                      <select
-                        value={order.status}
-                        onChange={(e) =>
-                          onStatusChange(
-                            order.id,
-                            e.target.value as OrderStatus,
-                          )
-                        }
-                        className="
-                          h-9
-                          appearance-none
-                          rounded-lg
-                          border
-                          border-slate-200
-                          bg-white
-                          py-1
-                          pl-3
-                          pr-8
-                          text-xs
-                          font-medium
-                          capitalize
-                          text-slate-600
-                          outline-none
-                          transition
-                          hover:border-slate-300
-                          focus:border-blue-500
-                          focus:ring-4
-                          focus:ring-blue-500/10
-                        "
-                      >
-                        {statuses.map((item) => (
-                          <option
-                            key={item}
-                            value={item}
-                          >
-                            {item}
-                          </option>
-                        ))}
-                      </select>
-
-                      <ChevronDown
-                        size={14}
-                        className="
-                          pointer-events-none
-                          absolute
-                          right-2.5
-                          top-1/2
-                          -translate-y-1/2
-                          text-slate-400
-                        "
-                      />
-                    </div>
+                    <OrderStatusControl
+                      order={order}
+                      onStatusChange={onStatusChange}
+                    />
                   </div>
                 </td>
               </tr>
@@ -234,6 +170,90 @@ export default function OrderTable({
           orders
         </p>
       </div>
+    </div>
+  )
+}
+
+function OrderStatusControl({
+  order,
+  onStatusChange,
+}: {
+  order: Order
+  onStatusChange: Props['onStatusChange']
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const controlRef = useRef<HTMLDivElement>(null)
+  const nextStatuses = allowedOrderStatusTransitions[order.status]
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!controlRef.current?.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setIsOpen(false)
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isOpen])
+
+  return (
+    <div ref={controlRef} className="relative">
+      <button
+        type="button"
+        disabled={nextStatuses.length === 0}
+        aria-label={
+          nextStatuses.length === 0
+            ? `${order.status} status is final`
+            : `Update ${order.status} order status`
+        }
+        aria-haspopup={nextStatuses.length > 0 ? 'menu' : undefined}
+        aria-expanded={nextStatuses.length > 0 ? isOpen : undefined}
+        onClick={() => setIsOpen((open) => !open)}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') setIsOpen(false)
+        }}
+        className={`inline-flex h-9 items-center gap-2 rounded-full px-3 text-xs font-semibold capitalize transition focus:outline-none focus:ring-4 focus:ring-blue-500/10 ${orderStatusStyles[order.status]} ${nextStatuses.length > 0 ? 'cursor-pointer hover:brightness-95' : 'cursor-not-allowed opacity-75'}`}
+      >
+        {order.status}
+        {nextStatuses.length > 0 && <ChevronDown size={14} />}
+      </button>
+
+      {isOpen && nextStatuses.length > 0 && (
+        <div
+          role="menu"
+          aria-label={`Next status for order ${order.id}`}
+          className="absolute right-0 top-full z-30 mt-2 min-w-40 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg shadow-slate-900/10"
+        >
+          {nextStatuses.map((nextStatus: OrderStatus) => (
+            <button
+              key={nextStatus}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                onStatusChange(order.id, nextStatus)
+                setIsOpen(false)
+              }}
+              className="flex w-full items-center justify-between gap-3 rounded-lg px-2.5 py-2 text-left text-sm capitalize text-slate-700 transition hover:bg-slate-50"
+            >
+              <span>Move to</span>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${orderStatusStyles[nextStatus]}`}
+              >
+                {nextStatus}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

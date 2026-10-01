@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { orders as initialOrders } from './data/orders'
-import type { Order, OrderStatus } from './types'
+import { allowedOrderStatusTransitions, type Order, type OrderStatus } from './types'
 
 type State = {
   orders: Order[]
@@ -10,7 +10,16 @@ type State = {
 export const useOrderStore = create<State>((set) => ({
   orders: initialOrders,
   updateStatus: (id, status) =>
-    set((s) => ({
-      orders: s.orders.map((o) => (o.id === id ? { ...o, status } : o)),
-    })),
+    set((state) => {
+      const order = state.orders.find((item) => item.id === id)
+      if (!order || !allowedOrderStatusTransitions[order.status].includes(status)) {
+        return state
+      }
+
+      return {
+        orders: state.orders.map((item) =>
+          item.id === id ? { ...item, status } : item,
+        ),
+      }
+    }),
 }))

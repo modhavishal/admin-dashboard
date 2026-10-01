@@ -1,6 +1,6 @@
 import type { OrderStatus } from '../types'
 
-const styles: Record<OrderStatus, string> = {
+export const orderStatusStyles: Record<OrderStatus, string> = {
   pending:
     'bg-amber-50 text-amber-700 ring-1 ring-amber-100',
   shipped:
@@ -20,13 +20,13 @@ export default function OrderStatusBadge({
     <span
       className={`
         inline-flex
-        rounded-lg
+        rounded-full
         px-2.5
         py-1
         text-xs
         font-semibold
         capitalize
-        ${styles[status]}
+        ${orderStatusStyles[status]}
       `}
     >
       {status}
