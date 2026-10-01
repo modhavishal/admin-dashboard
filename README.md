@@ -28,5 +28,11 @@ Feature-based architecture. Each feature keeps its own components, hooks, store 
     npm install
     npm run dev
 
+## Password reset setup
+1. Create a Firebase project, add a web app, and enable Email/Password under Authentication sign-in providers.
+2. Copy `.env.example` to `.env.local` and fill in the Firebase web app values. Vite loads these variables when the dev server starts.
+3. Make sure the accounts that need reset links exist in this Firebase project's Authentication users. This demo's login flow is still local-only.
+4. Add your deployed site's domain to Firebase Authentication's authorized domains and configure the password reset email template.
+
 ## Screenshots
 (Add 2-3 screenshots here)
