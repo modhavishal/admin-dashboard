@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Package, Tag, Boxes, IndianRupee } from 'lucide-react'
+import { Package } from 'lucide-react'
 
 import Button from '../../../shared/components/ui/Button'
 import Input from '../../../shared/components/ui/Input'
