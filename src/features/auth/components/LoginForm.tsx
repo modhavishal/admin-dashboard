@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Eye, EyeOff } from 'lucide-react'
 
 import Button from '../../../shared/components/ui/Button'
 import Input from '../../../shared/components/ui/Input'
@@ -18,6 +20,7 @@ export default function LoginForm({
   onForgotPassword: () => void
   onRegister: () => void
 }) {
+  const [showPassword, setShowPassword] = useState(false)
   const {
     register,
     handleSubmit,
@@ -44,10 +47,21 @@ export default function LoginForm({
       <div>
         <Input
           label="Password"
-          type="password"
+          type={showPassword ? 'text' : 'password'}
           placeholder="Enter your password"
           error={errors.password?.message}
           {...register('password')}
+          trailingAdornment={(
+            <button
+              type="button"
+              onClick={() => setShowPassword((visible) => !visible)}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-pressed={showPassword}
+              className="flex h-9 w-9 items-center justify-center text-slate-500 hover:text-slate-800 focus-visible:outline-2 focus-visible:outline-blue-600 focus-visible:outline-offset-2"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
+          )}
         />
 
         <div className="mt-2 text-right">
