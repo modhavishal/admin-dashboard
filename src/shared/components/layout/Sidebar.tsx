@@ -1,6 +1,8 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import toast from "react-hot-toast";
 import { useAuthStore } from "../../../features/auth";
+import { signOutAccount } from "../../../features/auth/firebase";
 
 import {
   LayoutDashboard,
@@ -12,6 +14,8 @@ import {
   AlertTriangle,
   X,
 } from "lucide-react";
+import Modal from "../ui/Modal";
+import Button from "../ui/Button";
 
 const mainLinks = [
   {
@@ -31,22 +35,35 @@ const mainLinks = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({
+  mobileOpen,
+  onMobileClose,
+}: {
+  mobileOpen: boolean;
+  onMobileClose: () => void;
+}) {
   const user = useAuthStore((s) => s.user);
-  const logout = useAuthStore((s) => s.logout);
 
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const handleLogout = () => {
-    logout();
-    setShowLogoutConfirm(false);
+  const handleLogout = async () => {
+    try {
+      await signOutAccount();
+      setShowLogoutConfirm(false);
+      toast.success("Signed out successfully.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Unable to sign out.");
+    }
   };
 
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col border-r border-slate-200 bg-white">
+    <aside
+      id="app-sidebar"
+      className={`fixed inset-y-0 left-0 z-50 flex h-dvh w-72 shrink-0 flex-col border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 md:relative md:z-auto md:h-screen md:w-64 md:translate-x-0 md:shadow-none ${mobileOpen ? "translate-x-0" : "-translate-x-full"}`}
+    >
 
       {/* Logo */}
-      <div className="flex h-20 items-center border-b border-slate-100 px-6">
+      <div className="flex h-20 items-center justify-between border-b border-slate-100 px-6">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
             <Pill size={21} strokeWidth={2.2} />
@@ -62,6 +79,14 @@ export default function Sidebar() {
             </p>
           </div>
         </div>
+        <button
+          type="button"
+          aria-label="Close navigation menu"
+          onClick={onMobileClose}
+          className="flex h-9 w-9 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 md:hidden"
+        >
+          <X size={19} />
+        </button>
       </div>
 
       {/* Navigation */}
@@ -77,6 +102,7 @@ export default function Sidebar() {
               to={link.to}
               label={link.label}
               icon={link.icon}
+              onNavigate={onMobileClose}
             />
           ))}
         </div>
@@ -85,115 +111,40 @@ export default function Sidebar() {
       {/* User section */}
       <div className="border-t border-slate-100 p-4">
 
-        <div className="mb-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3">
+        <Link
+          to="/profile"
+          aria-label="Open profile settings"
+          title="Profile settings"
+          onClick={onMobileClose}
+          className="mb-3 flex items-center gap-3 rounded-xl bg-slate-50 p-3 transition hover:bg-slate-100"
+        >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-600">
             {user?.email?.charAt(0).toUpperCase() || "A"}
           </div>
 
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-slate-800">
-              Admin
+            <p className="truncate text-xs font-semibold text-slate-800">
+              {user?.name || "Admin"}
             </p>
 
             <p className="truncate text-[11px] text-slate-400">
               {user?.email}
             </p>
           </div>
-        </div>
+        </Link>
 
-        {/* Logout area */}
-        <div className="relative">
 
-          {/* Confirmation Dropup */}
-          {showLogoutConfirm && (
-            <div
-              className="
-                absolute
-                bottom-full
-                left-0
-                z-50
-                mb-2
-                w-full
-                rounded-xl
-                border
-                border-slate-200
-                bg-white
-                p-3
-                shadow-xl
-                shadow-slate-900/10
-              "
-            >
-              <div className="flex items-start gap-2.5">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-red-600">
-                  <AlertTriangle size={16} />
-                </div>
-
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900">
-                    Logout?
-                  </p>
-
-                  <p className="mt-0.5 text-[11px] leading-4 text-slate-400">
-                    Are you sure you want to logout?
-                  </p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="ml-auto shrink-0 rounded-md p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-
-              <div className="mt-3 flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="
-                    flex-1
-                    rounded-lg
-                    border
-                    border-slate-200
-                    px-2.5
-                    py-2
-                    text-xs
-                    font-semibold
-                    text-slate-600
-                    transition
-                    hover:bg-slate-50
-                  "
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="
-                    flex-1
-                    rounded-lg
-                    bg-red-600
-                    px-2.5
-                    py-2
-                    text-xs
-                    font-semibold
-                    text-white
-                    transition
-                    hover:bg-red-700
-                  "
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-          )}
-
+        {/* Logout action */}
+        <div>
           {/* Logout button */}
           <button
             type="button"
-            onClick={() => setShowLogoutConfirm((prev) => !prev)}
+            onClick={() => {
+              onMobileClose();
+              setShowLogoutConfirm((prev) => !prev);
+            }}
+            aria-label="Logout"
+            title="Logout"
             className={`
               group
               flex
@@ -220,9 +171,47 @@ export default function Sidebar() {
 
             <span>Logout</span>
           </button>
-
         </div>
       </div>
+
+      <Modal
+        open={showLogoutConfirm}
+        title="Confirm logout"
+        onClose={() => setShowLogoutConfirm(false)}
+      >
+        <div className="space-y-6">
+          <div className="flex flex-col items-center py-2 text-center">
+            <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-600">
+              <AlertTriangle size={25} />
+            </div>
+            <p className="text-base font-semibold text-slate-900">
+              Are you sure you want to log out?
+            </p>
+            <p className="mt-2 max-w-xs text-sm leading-6 text-slate-500">
+              You will need to sign in again to access your dashboard.
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button
+              type="button"
+              variant="secondary"
+              className="flex-1"
+              onClick={() => setShowLogoutConfirm(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="danger"
+              className="flex-1"
+              onClick={handleLogout}
+            >
+              Logout
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
     </aside>
   );
 }
@@ -231,15 +220,19 @@ function SidebarLink({
   to,
   label,
   icon: Icon,
+  onNavigate,
 }: {
   to: string;
   label: string;
   icon: React.ElementType;
+  onNavigate: () => void;
 }) {
   return (
     <NavLink
       to={to}
       end={to === "/"}
+      title={label}
+      onClick={onNavigate}
       className={({ isActive }) =>
         `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
           isActive
